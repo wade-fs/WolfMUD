@@ -1,0 +1,978 @@
+
+名稱
+
+  WolfMUD 區域檔案
+
+說明
+
+  本文檔描述了 WolfMUD 區域文件的詳細信息。 WolfMUD 區域文件以 WolfMUD record jar 格式編寫，如文檔 wolfmud-record-format.txt 中所述，並具有 .wrj 擴展名。
+
+  啟動時，WolfMUD 服務器將嘗試從位於服務器數據目錄中的區域子目錄加載擴展名為 .wrj 的區域文件。 有關詳細信息，請參閱：running-the-server.txt
+
+  區域文件包含一個可選的區域標題記錄，提供有關區域的簡要信息，例如區域名稱和作者姓名。 其餘記錄詳細描述了世界上的位置和物體。
+
+  以下是帶有可選標題記錄、位置記錄、敘述記錄和項目記錄的區域文件示例：
+
+
+    // Copyright 2016 Andrew 'Diddymus' Rolfe. All rights reserved.
+    //
+    // Use of this file is governed by the license in the LICENSE file
+    // included with the source code.
+    %%
+          Ref: ZINARA
+         Zone: City of Zinara
+       Author: Andrew 'Diddymus' Rolfe
+     Disabled: FALSE
+
+    This is the city of Zinara.
+    %%
+           Ref: L1
+          Name: Fireplace
+       Aliases: TAVERN FIREPLACE
+         Start:
+         Exits: E=L3 SE=L4 S=L2
+     Inventory: L1N1
+          Veto: COMBAT=The tavern is a sanctuary for all. A place to rest and
+                heal, not fight.
+
+    You are in the corner of the common room in the dragon's breath tavern. A
+    fire burns merrily in an ornate fireplace, giving comfort to weary
+    travellers. The fire causes shadows to flicker and dance around the room,
+    changing darkness to light and back again. To the south the common room
+    continues and east the common room leads to the tavern entrance.
+    %%
+           Ref: L1N1
+          Name: an ornate fireplace
+         Alias: FIREPLACE
+     Narrative:
+          Veto: GET=For some inexplicable reason you can't just rip out the
+                fireplace and take it!
+
+    This is a very ornate fireplace carved from marble. Either side a dragon
+    curls downward until the head is below the fire looking upward, giving the
+    impression that they are breathing fire.
+    %%
+          Ref: O1
+         Name: a curious brass lattice
+      Aliases: LATTICE
+     Location: L1
+         Veto: JUNK=The lattice cannot be junked.
+       Action: AFTER=5m JITTER=2m30s
+     OnAction: $ACT quietly chimes.
+             : $ACT quietly hums.
+      Cleanup: AFTER=10m
+    OnCleanup: The curious brass lattice starts to slowly spin. It rapidly
+               gains speed and then suddenly collapses in on itself and
+               disappears.
+        Reset: AFTER=2m JITTER=1m
+      OnReset: There is a gentle, musical ping and a curious brass lattice
+               suddenly appears from nowhere.
+
+    This is a finely crafted, intricate lattice of fine brass wires forming a
+    roughly ball shaped curiosity.
+    %%
+
+欄位資料型態
+
+  根據欄位名稱，數據格式可能需要採用特定格式。 本節列出了不同的格式。
+
+  字串
+    資料是一個簡單的字符串，例如:
+
+      Name: a curious brass lattice
+
+  整數
+    資料是一個簡單的整數，例如:
+
+      Armour: 10
+
+  雙整數
+    數據是兩個有符號整數，由加號“+”或減號“-”分隔。 前導整數可以是有符號的。 如果指定了單個值，則第二個值假定為零。 如果只有第二個值很重要，則第一個值必須為零。 例如：
+
+      Damage:  1+3
+      Damage:  0-5
+      Damage: -1+5
+      Damage:  5
+      Damage: -5
+
+  關鍵字
+    數據是單個不區分大小寫的詞，通常寫成大寫。 關鍵字可以包含任何 Unicode 字母、數字 0-9、下劃線“_”或連字符“-”。 關鍵字將自動大寫。 例如：
+
+      Ref: L1
+
+  關鍵字清單
+    數據是一個由空格分隔、不區分大小寫的單詞列表。 每個單詞通常都是大寫的。 例如：
+
+       Aliases: TAVERN FIREPLACE
+
+  成對清單
+    數據是用空格分隔的成對列表。 每對由非數字、非字母、非連字符/減號“-”或非下劃線“_”字符分隔。 也就是說，分隔符之前的關鍵字可以包含數字、字母、連字符/減號或下劃線。 例如：
+
+      Exits: E=L3 SE=L4 S=L2
+
+    上面示例中共有三對：E=L3、SE=L4 和 S=L2。 每對由“=”分隔，這是關鍵字中無效的第一個字符。
+
+    名稱不區分大小寫。
+
+    在某些情況下，關鍵字可能包含前導感嘆號“!”，它不會被識別為關鍵字/值定界符。 帶前導感嘆號的關鍵字與不帶感嘆號的關鍵字不同。 例如 '!KEYWORD' 與 'KEYWORD' 是分開的。 後面的記錄部分將詳細說明前導感嘆號何時對關鍵字有效。
+
+  字串清單
+    使用冒號“:”作為分隔符將數據分隔成字串清單。 例如：
+
+      Actions: The rabbit hops around a bit.
+             : You see the rabbit twitch its little nose, Ahh...
+
+    這會定義出兩個動作(Action)
+
+  關鍵字與字串成對列表
+    數據分為關鍵字和字串對，每對由冒號分隔。 為了提高可讀性，冒號可以另起一行。 關鍵字應該是一個單詞，後跟一個非數字、非字母、非連字符/減號“-”或非下劃線“_”分隔符。 也就是說，分隔符之前的關鍵字可以包含數字、字母、連字符/減號或下劃線。 例如：
+
+      Vetoes: GET=You cannot get it!
+            : EXAMINE=You go to examine it, as it seems to be a very curious
+              thing indeed, but it is beyond description...
+            : PUT=It does not want to be put anywhere!
+
+    This defines three vetoes, each separated by a colon. Each veto is a
+    keyword - here GET, EXAMINE and PUT - each followed by a string. The
+    keywords and strings are separated using the '=' character, but any
+    non-digit, non-letter, non-hyphen/minus or non-underscore can be used.
+
+「在」參考 / @REF
+
+  當為欄位指定數據時，可以使用特殊的@ref 來引用相同的欄位，但定義在另一個記錄中。 例如，一個標準的人形Body可以定義為：
+  註：我理解為定義常數或物件
+
+    %%
+     Ref: STD_HUMANOID
+    Body: ANKLE=2 BACK=1 CHEST=1 EAR=2 ELBOW=2 EYE=2 FACE=1 FINGER=8 FOOT=2
+          HAND=2 HEAD=1 KNEE=2 LOWER_ARM=2 LOWER_LEG=2 LOWER_LIP=1 MOUTH=1
+          NECK=1 NOSE=1 PELVIS=1 SHOULDER=2 THUMB=2 UPPER_ARM=2 UPPER_LEG=2
+          UPPER_LIP=1 WAIST=1 WRIST=2
+    %%
+
+  然後可以使用 @ref 引用標準的人形Body：
+
+    %%
+      Ref: M1
+     Name: Alice
+    Alias: ALICE
+     Body: @STD_HUMANOID
+
+    This is Alice.
+    %%
+
+  @ref 用例 '@STD_HUMANOID' 表示從引用 'STD_HUMANOID' 的 Body 欄位複制數據，並用複制的數據替換 @STD_HUMANOID。實際上相當於如下:
+
+    %%
+      Ref: M1
+     Name: Alice
+    Alias: ALICE
+     Body: ANKLE=2 BACK=1 CHEST=1 EAR=2 ELBOW=2 EYE=2 FACE=1 FINGER=8 FOOT=2
+           HAND=2 HEAD=1 KNEE=2 LOWER_ARM=2 LOWER_LEG=2 LOWER_LIP=1 MOUTH=1
+           NECK=1 NOSE=1 PELVIS=1 SHOULDER=2 THUMB=2 UPPER_ARM=2 UPPER_LEG=2
+           UPPER_LIP=1 WAIST=1 WRIST=2
+
+    This is Alice.
+    %%
+
+  複製的數據只會替換@ref 的相同欄位。 這允許為欄位指定其他數據。 例如，我們可以定義一些持續時間較短的標準事件：
+
+    %%
+        Ref: SHORT
+      Reset: AFTER=30s JITTER=30s
+      After: AFTER=30s JITTER=30s
+    Cleanup: AFTER=30s JITTER=30s
+    %%
+
+  然後我們可以指定一個引用事件的 @ref，在本例中為 Reset，還可以指定其他值，例如 SPAWN，因為只有 @ref @SHORT 被替換：
+
+    Reset: @SHORT SPAWN
+
+  上例會擴展成:
+
+    Reset: AFTER=30s JITTER=30s SPAWN
+
+  一個欄位可以指定多個@ref。 例如，我們可以定義一些默認的動作組：
+
+    %%
+         Ref: ACT1
+    OnAction: $ACT starts to whistle a little ditty.
+            : SAY Nice weather for it...
+            : SAY Now let me see...
+            : SAY Can I help you with something?
+    %%
+         Ref: ACT2
+    OnAction: $ACT watches you suspiciously.
+            : $ACT smiles and nods.
+            : $ACT looks at you, then quickly looks away again.
+    %%
+
+  然後我們可以選擇使用哪些組，和/或補充它們：
+
+    OnAction: @ACT1
+
+    OnAction: @ACT1
+            : @ACT2
+
+    OnAction: @ACT1
+            : @ACT2
+            : $ACT starts sweeping the floor.
+
+  @ref 可以嵌套，即 @ref 可以引用也包含 @ref 的定義。 例如：
+
+    %%
+      Ref: RESET
+    Reset: AFTER=1m JITTER=1m
+    %%
+      Ref: RESET_SPAWN
+    Reset: @RESET SPAWN
+    %%
+      Ref: BALL
+     Name: a ball
+    Alias: BALL
+    Reset: @RESET_SPAWN
+
+    This is a ball.
+    %%
+
+  這裡球的定義有一個@RESET_SPAWN 的@ref 作為重置欄位。 RESET_SPAWN 的重置欄位使用@RESET 後跟SPAWN 的@ref。 這意味著球上的 Reset 欄位擴展為：
+
+    Reset: AFTER=1m JITTER=1m SPAWN
+
+  @ref 不會覆蓋已經設置的值。 例如：
+
+    %%
+      Ref: RESET
+    Reset: AFTER=1m JITTER=1m SPAWN
+    %%
+      Ref: BALL
+     Name: a ball
+    Alias: BALL
+    Reset: SPAWN=FALSE @RESET
+
+    This is a ball.
+    %%
+
+  對於 Reset 欄位，我們在 @ref 之前將 SPAWN 設置為 false 它不會被 @ref 覆蓋，反過來說，這將具有覆蓋 @ref 上使用的 SPAWN 的效果。意思就是 @ref 只引用未定義的欄位。
+
+  參考: REF
+
+PREFERRED FIELD ORDERING
+預定的欄位順序
+
+  當寫入區域文件時，欄位的順序對服務器沒有影響。 但是，默認區域文件會嘗試並遵循首選順序，因為它使維護和共同創作更加容易。 使用的首選順序是：
+
+    區域標題記錄
+      Ref
+      Zone
+      Author
+      Disabled
+      Description   <----- 最後才是自由文本塊或其他欄位（總是最後）
+
+    所有其他記錄
+      Ref           <----.
+      Name               | 1) 身份信息
+      Alias/Aliases <----'
+      Start         <----.
+      Exit/Exits         |
+      ZoneLinks          | 指定位置信息
+      Barrier            |
+      Door               |
+      Location      <----'
+      Description   <----- 當用做欄位時
+      Body          <----.
+      Gender             |
+      Health             |
+      Armour             |
+      Damage             |
+      Inv/Inventory      | Body / 項目相關信息
+      Holding            |
+      Wearing            |
+      Wielding      <----'
+      Narrative     <----.
+      Holdable           |
+      Wearable           | 影響某物的使用方式
+      Wieldable          |
+      Writing            |
+      Veto/Vetoes   <----'
+      Action        <----.
+      OnAction           |
+      Cleanup            | 事件信息
+      OnCleanup          |
+      OnCombat           |
+      Reset              |
+      OnReset       <----'
+      Description   <----- 最後才是自由文本塊或其他欄位（總是最後）
+
+  使用此列表完全是可選的，由區域作者自行決定。
+
+區域標題記錄
+
+  區域頭記錄是可選的。 如果存在，它可以包含以下欄位：
+
+  AUTHOR: <STRING>
+    本區域的作者名稱。
+
+  DISABLED: <BOOLEAN>
+    將此設置為 true 或不設置，將阻止加載區域。 對於正在開發的區域或在特殊場合的區域文件之間切換很有用。 如果省略欄位，則相當於專門指定 false。 默認值為假。
+
+  REF: <KEYWORD>
+    REF 是對區域的引用。 對於每個可用區域，參考應該是唯一的。 它用於 ZONELINKS 欄位，以便不同的區域可以鏈接在一起。
+
+  ZONE: <STRING>
+    簡述本區域。
+
+  FREE TEXT BLOCK
+    自由文本區是本區域的詳細說明。當然是有空寫的情況下。
+
+區域記錄
+
+  可選區域標題記錄之後的附加區域記錄用於定義位置和對象。 它們是通過使用組合欄位類型來定義的。 通過將不同的欄位組合在一起，可以定義不同類型的對象。 以下是可用的不同欄位：
+
+  ACTION: <PAIR LIST>
+    ACTION 用於指定項目執行操作的頻率。 對 ACTION 有效的對是：
+
+      AFTER=<period>
+      JITTER=<period>
+
+    例如：
+
+      ACTION: AFTER=5m JITTER=2m30s
+
+    AFTER 和 JITTER 指定執行動作之間的等待時間介於 AFTER 和 AFTER+JITTER 之間。 在這個例子中，每五到七分半鐘就會發生一個動作。
+
+    如果指定了 ACTION 但未定義 AFTER、JITTER 和 DUE_IN，則最短時間將為 1 秒。
+
+    要執行的操作通過 ONACTION 指定。
+
+    參考: DUE_IN
+
+  ALIAS: <KEYWORD LIST>
+  ALIASES: <KEYWORD LIST>
+    玩家用來指代物品的關鍵字列表。 為了說明別名，將使用以下劍的定義：
+
+      %%
+          Ref: O1
+         Name: a wooden shortsword
+      Aliases: SWORD SHORTSWORD WEAPONS
+        Reset: AFTER=1m JITTER=1m
+      Cleanup: AFTER=10m JITTER=5m
+
+      This is a shortsword made of wood for use in training.
+      %%
+
+    別名“SWORD”、“SHORTSWORD”和“WEAPONS”允許在玩家使用的命令中指定項目。 例如 'GET SWORD', 'EXAMINE SHORTSWORD', 'DROP ALL WEAPONS'
+
+    When defining items it is a good idea to have at least one general category for the item, in this case 'WEAPONS'. This allows a player to easily refer to groups of items in a command such as 'DROP ALL WEAPONS'.
+    定義物品時，最好為物品至少設置一個通用類別，在本例中為 'WEAPONS'。 這允許玩家輕鬆地在命令中引用項目組，例如 'DROP ALL WEAPONS'
+
+    別名限定詞(修飾詞)
+    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+    別名可以用一個或多個可選的限定符使用加號“+”來定義。 可以通過使用“+SHORT”和“+WOODEN”限定符來改進上面的示例：
+
+      Aliases: +WOODEN +SHORT SWORD SHORTSWORD
+
+    這在存在相似物品並且玩家想要輕鬆瞄準特定物品時最有用 - 例如短劍和長劍。 使用修改後的別名定義，玩家可以使用以下任何命令：
+
+      GET SWORD
+      GET SHORTSWORD
+      GET WOODEN SWORD
+      GET WOODEN SHORTSWORD
+      GET SHORT SWORD
+      GET WOODEN SHORT SWORD
+      GET SHORT WOODEN SWORD
+
+    綁定限定詞(修飾詞)
+    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+    別名限定符可以通過指定限定符、冒號“:”和限定符綁定到的別名來綁定到特定別名。 不必單獨指定綁定限定符的別名。
+
+    上述修改後的別名定義的一個缺點是它還允許玩家指定如下命令：
+
+      GET SHORT SHORTSWORD
+      GET SHORT WOODEN SHORTSWORD
+
+    這可能是理想的，也可能不是。 如果不是，則可以使用綁定限定符來指定限定符只能與特定別名一起使用。 一個更好的短劍別名定義是：
+
+      Aliases: +WOODEN +SHORT:SWORD SHORTSWORD
+
+    The bound qualifier here is '+SHORT:SWORD'. This specifies that the qualifier 'SHORT' is only valid when used with the alias 'SWORD'. That is, the qualifier 'SHORT' is bound to the alias 'SWORD'. This means the player can now use only the following:
+    這裡的綁定限定符是“+SHORT:SWORD”。 這指定限定符“SHORT”僅在與別名“SWORD”一起使用時有效。 也就是說，限定符“SHORT”綁定到別名“SWORD”。 這意味著玩家現在只能使用以下內容：
+
+      GET SWORD
+      GET SHORTSWORD
+      GET SHORT SWORD
+      GET WOODEN SWORD
+      GET WOODEN SHORT SWORD
+      GET WOODEN SHORTSWORD
+
+    命令“GET SHORT SHORTSWORD” 或 “GET SHORT WOODEN SWORD” 將不再被識別為“SHORT”只是“SWORD”的限定符，而不是“SHORTSWORD”。 另請注意，限定詞“WOODEN”仍未綁定，因此可以與任何其他別名和/或限定詞一起使用。
+
+    定義綁定限定符時，前導“+”是可選的。 例如，可以使用“SHORT:SWORD”或“+SHORT:SWORD”，儘管後者更適合匹配未綁定限定符的定義。
+
+    定義綁定限定符時，不必單獨定義別名。 在上面的示例中，綁定別名“+SHORT:SWORD”將自動定義別名“SWORD”，但如果需要，仍然可以為清楚起見指定它。
+
+    在按大小、顏色或材料區分項目時，可以很好地使用限定符，無論是綁定的還是未綁定的。 還應該注意的是，所有玩家都自動擁有“PLAYER”組別名。
+
+  ARMOUR: <INTEGER>
+    ARMOUR, 當為玩家或移動設備指定時，表示基本天生護甲或避免傷害的能力。 當為一件物品指定時，它表示在使用或穿戴該物品時應用的額外護甲。 ARMOUR 可以反映物理保護，如堅韌的皮革或磨損的盔甲。 它還可以反映用於避免受到傷害的速度或技能。
+
+      ARMOUR: 10
+
+    對於玩家或移動設備，這表示基本 ARMOUR 值為 10。當在物品上指定時，它表示使用該物品時額外的 10 點護甲。
+
+    如果 ARMOUR 值為負，它將作為懲罰應用，減少護甲總量。 例如，一把巨大的戰斧可能會造成很大的傷害，但由於它會讓你失去平衡而導致護甲降低。
+
+    在戰鬥中，玩家或移動設備的總護甲為：
+
+      自然護甲 + 所有裝備和穿戴物品的護甲
+
+    參考: DAMAGE and ONCOMBAT
+
+  BARRIER: <PAIR LIST>
+    BARRIER 用於有條件地阻止移動設備在特定方向上的移動。 基於為試圖穿過屏障的移動設備定義的別名，可以允許或拒絕穿過屏障的運動。 障礙只是一種方式。 也就是說，A 處的障礙可以阻止向 B 的移動，但是需要 B 處的另一個障礙來阻止從 B 返回 A 的移動。BARRIER 允許的對是：
+
+      EXIT=<direction>
+      DENY=<alias,alias,...>
+      ALLOW=<alias,alias,...>
+
+    例如：
+
+      BARRIER: EXIT=S DENY=CREATURE,NPC ALLOW=GUARD,WARDEN
+
+    EXIT 定義屏障阻擋的方向。方向可以用長格式或短格式指定（請參閱 EXITS）。如果指定的出口不存在，障礙將被忽略。
+
+    DENY 是不允許通過屏障的別名的逗號分隔列表。 ALLOW 可能會覆蓋 DENY 列表。如果沒有一個活物的別名與 DENY 列表匹配，則該活物將被允許通過。請注意，逗號分隔列表中不應有空格。
+
+    ALLOW 是一個以逗號分隔的別名列表，這些別名特別允許通過屏障。如果別名與 ALLOW 列表匹配，則活物將被允許通過屏障，即使其別名之一也與 DENY 列表匹配。請注意，逗號分隔列表中不應有空格。
+
+    在上面的示例中，屏障被定義為阻止所有活物向南移動，如果它們具有 CREATURE 或 NPC 的別名 - 除非它們具有 GUARD 或 WARDEN 的別名。在定義活物時，通常最好指定一個通用的組別名，例如 CREATURE、NPC 或 GROUP1，以及一個更具體的別名，例如 GUARD、WARDEN 或 IMP。這使得在允許特定手機的同時更容易阻止大型團體。
+
+    還應該注意的是，所有玩家都有組別名 PLAYER。對於玩家，ALLOW 和 DENY 不適用於作為玩家名稱的別名。這意味著無法通過名字來阻止特定玩家。否則自稱為“Guard”、“Creature”或“Admin”的玩家可能會造成惡作劇。
+
+    如果僅指定 ALLOW，則默認情況下拒絕所有其他別名。這允許指定一個屏障，只需將 ALLOW 設置為按預期工作。
+
+    例如，一個屏障只允許別名為 GUARD 或 WARDEN 的移動設備向南移動，同時阻止其他人：
+
+      BARRIER: EXIT=S ALLOW=GUARD,WARDEN
+
+    如果僅指定 DENY，則默認情況下允許所有其他別名。
+
+    例如，一個屏障只拒絕別名為 CREATURE 的移動設備向南移動，同時允許其他人：
+
+      BARRIER: EXIT=S DENY=CREATURE
+
+    如果既未指定 ALLOW 也未指定 DENY，則屏障會阻止所有人。
+
+    不可見的 BARRIER 可以指定為位置定義的一部分。障礙也可以定義為敘述。至少，敘述障礙需要指定 BARRIER、NARRATIVE 和 REF 欄位。將障礙定義為敘述的優點是每個位置可以有多個障礙，這與直接向一個位置添加 BARRIER 欄位不同 - 只能有一個 BARRIER 欄位，它只允許阻塞一個出口。敘事障礙也可以定義一次並在多個地方重複使用。屏障也可能有別名、名稱和允許與之交互的描述。
+
+    屏障也可以被定義為允許屏障便攜的物品或在物品上。如果物品被撿起，屏障將停止阻擋，直到再次掉落。如果障礙被定義為作為項目一部分的敘述，它將應用於項目的內容而不是項目所在的位置。
+
+    如果在某個位置定義了障礙，或者定義為沒有 NAME 屬性的敘述，則無法移動的玩家會看到：
+
+      "You cannot go <dir> something is blocking your way."
+
+    如果在項目上定義了障礙或將其定義為具有 NAME 屬性的敘述，則將使用項目或敘述的名稱：
+
+      "You cannot go <dir> <name> is blocking your way."
+
+    參考: ALIASES
+
+  Body: <PAIR LIST>
+    Body 用於指定玩家和移動設備的 Body 槽位。 Body 槽決定了哪些物品可以被持有、穿戴或使用。 列表中的每一對都將插槽名稱定義為關鍵字，後跟可選數量。 例如：
+
+      Body: TORSO HAND=2
+
+    這定義了一個具有一個 TORSO 插槽和兩個 HAND 插槽的 Body。 當前不可用的插槽可以通過在插槽名稱前加上感嘆號“！”來定義。 例如：
+
+      Body: TORSO HAND !HAND
+
+    我們現在擁有與以前相同的 Body，但少了一隻手。 通過將插槽標記為不可用，可以使用魔法、治療或修復術來恢復它。 請注意，如果玩家缺少一隻手，那麼他們將只能使用單手武器——例如不能使用弓箭。 還應注意的是，具有四隻手臂/手的神話生物將能夠使用兩把弓或一把弓和兩把單手武器 - 只需提供適當的 Body 插槽即可。
+
+    可以僅使用幾個通用插槽來定義 Body。 例如，一個最小的 Body 是：
+
+      Body: TORSO HAND=2
+
+    這將允許使用 TORSO 插槽穿上基本的盔甲/衣服。 它還允許在 HAND 插槽中持有、佩戴或使用物品。 自動擁有兩隻手允許單持或雙持武器以及使用雙手武器（如弓）。
+
+    Body 也可以定義為具有大量可用插槽，允許玩家進行更多自定義。 目前默認的人形 Body 定義為：
+
+      Body: HEAD FACE EAR=2 EYE=2 NOSE MOUTH UPPER_LIP LOWER_LIP NECK
+            SHOULDER=2 UPPER_ARM=2 ELBOW=2 LOWER_ARM=2 WRIST=2 HAND=2 FINGER=8
+            THUMB=2 CHEST BACK WAIST PELVIS UPPER_LEG=2 KNEE=2 LOWER_LEG=2
+            ANKLE=2 FOOT=2
+
+    唯一的限制是插槽名稱：HEAD、HAND 等用於定義 Body 插槽的插槽名稱與定義項目時用於 HOLDABLE、WEARABLE 和 WIELDABLE 欄位的插槽名稱相匹配。 不必使用所有已定義的插槽。 例如，可能沒有當前使用 MOUTH、UPPER_LIP 或 LOWER_LIP 插槽的可手持、可穿戴或可揮舞的物品。
+
+    參考: HOLDABLE, WEARABLE and WIELDABLE
+
+  CLEANUP: <PAIR LIST>
+    CLEANUP 用於指定等待多長時間，在一個項目被刪除之後，在它被自動清理和重置或處理之前。 如果某件物品沒有經過 CLEANUP，它將被隨意放置。 對 CLEANUP 有效的對是：
+
+      AFTER=<period>
+      JITTER=<period>
+
+    例如:
+
+      CLEANUP: AFTER=2m JITTER=1m
+
+    AFTER 和 JITTER 指定在清理項目之前等待的時間介於 AFTER 和 AFTER+JITTER 之間。 如果指定了 CLEANUP 但未定義 AFTER、JITTER 和 DUE_IN，則最短清理週期將為 1 秒。
+
+     通過為項目定義 ONCLEANUP 清理項目時，可以顯示自定義消息。
+
+    參考: ONCLEANUP
+
+  DAMAGE: <DOUBLE INTEGER>
+    DAMAGE 指定一次成功的攻擊將造成的傷害量。 DAMAGE 指定為 DOUBLE INTEGER。 第一個整數是固定傷害量。 第二個整數是額外隨機傷害的最大數量。 比如指定2點傷害加1-2點額外傷害：
+
+      DAMAGE: 2+2
+
+    傷害，當為玩家或活物指定時，表示踢、拳、爪、咬、刺等造成的基本自然傷害。當為物品指定時，它表示當物品被揮舞或佩戴時造成的額外傷害。
+
+    如果指定的 DAMAGE 為負，它將作為懲罰應用，減少造成的總傷害。 例如，非常重的裝甲可以提供很高的 ARMOR 等級，但代價是由於缺乏機動性而減少了傷害。
+
+    在戰鬥中，一次成功的攻擊造成的總傷害為：
+
+      Natural DAMAGE + ( DAMAGE of all wielded or worn items )
+
+    參考: ARMOUR and ONCOMBAT
+
+  DESCRIPTION: <STRING>
+    DESCRIPTION 提供位置、移動設備或項目的描述性文本。 描述可能會超過一行，但不會保留空白格式。 例如：
+
+      DESCRIPTION: This is a finely crafted, intricate lattice of fine brass
+                   wires forming a roughly ball shaped curiosity.
+
+    FREE TEXT BLOCK 可用於代替 DESCRIPTION，並提供更靈活的格式選項。 如果為記錄指定了 DESCRIPTION 和 FREE TEXT BLOCK，則 FREE TEXT BLOCK 將附加到 DESCRIPTION 並且 FREE TEXT BLOCK 將保留任何格式。
+
+    @REF 可以在 DESCRIPTION 欄位中使用。 它將根據指定的內容自動引用文字描述欄位、自由文本塊或兩者的串聯。
+
+    參考: FREE TEXT BLOCK and @REF
+
+  DOOR: <PAIR LIST>
+    DOOR 欄位定義任何可以阻擋行進方向的類似門的東西。 例如門、大門、面板或書櫃。 對 DOOR 有效的對是：
+
+      EXIT=<direction>
+      RESET=<period>
+      JITTER=<period>
+      OPEN=<boolean>
+
+    例如:
+
+      DOOR: EXIT=E RESET=2m JITTER=1m OPEN=false
+
+    EXIT 定義了 DOOR 關閉時被阻擋的方向。方向可以用長格式或短格式指定（請參閱 EXITS）。如果未指定 EXIT，則 DOOR 不會阻止行進但仍然可以打開和關閉 - 也許它只是靠在牆上？ :)
+
+    OPEN 定義門最初是打開還是關閉。如果省略，則默認為 false（關閉）。僅指定不帶任何值的 OPEN 是 OPEN=True 的簡寫。
+
+    RESET 定義延遲，在此之後門應自動重置為打開或關閉的初始狀態 - 如上面的 OPEN 所定義。週期應以以下形式給出：0h0m0s 例如“30s”表示 30 秒。相當於零長度持續時間的值會禁用自動重置。例如 0h、0m 或 0s。如果省略則默認為 0。
+
+    JITTER 定義了添加到 RESET 延遲的最大隨機時間量。也就是說，實際延遲將介於 RESET 和 RESET+JITTER 之間。在示例中，1m 的抖動將導致 DOOR 在延遲 2 到 3 分鐘（2m 到 2m+1m 之間）後重置。 0 的 JITTER 不會給 RESET 延遲增加隨機性。如果省略則默認為 0。
+
+    如果 RESET 和 JITTER 都設置為 0，DOOR 將不會自動重置為初始狀態。
+
+    注意：DOOR 屬性只能作為一個位置的敘述項添加。不支持將 DOOR 屬性添加為位置定義的一部分，DOOR 將被忽略。將 DOOR 直接添加到可移動項目可能會導致意外/奇怪的行為。
+
+  EXIT: <PAIR LIST>
+  EXITS: <PAIR LIST>
+    一個 EXITS 欄位將某物定義為一個位置，允許對什麼是位置進行非常寬鬆的定義。 列表中的每一對都應包含一個方向，然後是一個非數字、非字母分隔符，然後是對另一個位置的引用。
+
+    出口指示可以長格式或短格式給出。 可用的長格式和短格式是：
+
+      North - N, Northeast - NE, East - E, Southeast - SE,
+      South - S, Southwest - SW, West - W, Northwest - NW,
+      Up - U,    Down - D
+
+    方向與參考文獻一樣不區分大小寫。 一個例子可能是：E=L3。 這意味著從定義出口的位置向東將通向 REF 欄位為 L3 的位置。 如果給出了無效引用，則退出將被忽略。 由於引用僅在單獨的區域文件中是唯一的，因此不同區域中的位置之間的退出需要使用 ZONELINKS 欄位。
+
+    添加出口時，應注意它們通常作為相反的對添加。 例如：從 A 向東通向 B，從 B 向西通向 A。由於出口是獨立添加到 A 和 B 的，因此情況不一定總是如此。(迷宮？)
+
+    EXIT 對可能不完整。 例如，S 或 S=。 這在開發區域時作為提醒很方便。 這種不完整的對將被忽略。 要在加載區域時發出警告，請改用無效引用。 例如，S=X
+
+    參考: ZONELINKS
+
+  GENDER <KEYWORD>
+    GENDER 用於表示玩家角色或手機的性別。 有效值為 MALE、FEMALE、NEUTRAL 或 IT。 如果未指定，則假定為 IT。 默認值很有用，因為活物的大多數定義適用於 IT， 適合的生物或物體。 玩家在創建角色時不能選擇成為IT。
+
+    參考: ONCOMBAT
+
+  HEALTH: <PAIR LIST>
+    HEALTH 欄位指定玩家或活物的當前、最大和治療率。 對 HEALTH 有效的對是：
+
+      AFTER=<period>
+      JITTER=<period>
+      CURRENT=<integer>
+      MAXIMUM=<integer>
+      RESTORE=<integer>
+
+    例如：
+
+      HEALTH: AFTER=10S CURRENT=50 JITTER=0S MAXIMUM=30 RESTORE=2
+
+    AFTER 和 JITTER 指定當 CURRENT 健康低於 MAXIMUM 健康時健康恢復的時間段在 AFTER 和 AFTER+JITTER 之間。。 恢復的健康量由 RESTORE 指定。 在示例中，每 10 秒將恢復 2 點生命值。
+
+    指定 JITTER 是可選的。 如果未指定 AFTER 和 JITTER，則不會自動恢復健康。
+
+     玩家或活物的當前健康狀況使用 CURRENT 指定。 使用 MAXIMUM 指定可以恢復的最大健康狀況。 當前生命值可能會暫時超過最大值，但治療不會使健康值超過最大值。 如果 CURRENT 低於 1，則玩家或活物已被殺死。 只有具有 HEALTH 的活物才能被攻擊和殺死。
+
+    SELF HEALING
+
+      如果某物具有定義為 MAXIMUM、RESTORE、AFTER 和/或 JITTER 集合的 HEALTH 欄位，則它可以自我修復。 如果某些東西可以自愈並且沒有指定 CURRENT，那麼當它被加載到遊戲世界時，CURRENT 將被設置為等於 MAXIMUM。
+
+    MOBILES & NPCs
+
+      活物或非玩家角色 (NPC) 被認為是任何可以自我修復的東西。
+
+      不能使用 GET 命令拾取活物和 NPC - 除非通過將活物或 NPC 定義為 HOLDABLE 來特別允許。 無法使用 TAKE 命令從活物/NPC 上取走物品。 無法使用 PUT 命令將物品提供給活物/NPC。
+
+      活物或 NPC 不需要定義 Body。 例如，您不需要為每個小動物和令人毛骨悚然的爬蟲創建一個身體。
+
+      參考: Body
+
+  HOLDABLE: <PAIR LIST>
+    The HOLDABLE 欄位 specifies that an item can be held and the Body slots required to do so. Unlike WEARABLE and WIELDABLE any item, except players and mobiles - i.e. items with a Body 欄位 defined, can be held as if they were defined with:
+
+      HOLDABLE: HAND
+
+    這可以通過添加特定的 HOLDABLE 欄位來覆蓋。 例如，如果一個項目需要兩隻手來握住它，那麼定義將是：
+
+      HOLDABLE: HAND=2
+
+    一個特定的 HOLDABLE 欄位也可以添加到活物上，也許這樣可以容納小動物。 在這種情況下，HOLDABLE 可以是一隻手或兩隻手，具體取決於移動設備的大小。
+
+    如果一個項目根本不應該被保留，那麼 HOLD 命令可以被否決：
+
+      VETO: HOLD=You cannot hold that in your hand.
+
+    這將允許覆蓋項目的默認 HOLDABLE 能力。
+
+    為了成功持有物品，Body 插槽必須可供持有者使用，並且還必須是空閒的——不能在所需的插槽中持有、穿戴或使用其他物品。
+
+    參考: Body, WEARABLE and WIELDABLE
+
+  HOLDING: <KEYWORD LIST>
+    HOLDING 欄位指定活物最初加載時應持有的項目。 HOLDING 欄位後面應跟有要持有的項目的參考列表。 例如：
+
+      HOLDING: O1 O2
+
+    其中 O1 和 O2 是活物庫存中可以持有的物品，並定義了“Ref: O1”和“Ref: O2”。
+
+    為了成功持有物品，該物品需要是可持有的，在活物的庫存清單中，活物應該有一個 Body，定義了持有物品所需的 Body 部分。
+
+    參考: Body, HOLDABLE, WEARING and WIELDING
+
+  INVENTORY: <KEYWORD LIST>
+    INVENTORY 欄位將某物定義為容器或位置。它後面可以跟一個空格分隔的引用列表。將查找每個引用，並將其唯一引用的內容放入清單中。相同的引用可能出現在多個 INVENTORY 中，在這種情況下，將製作原始內容的副本。舉個例子：
+
+      INVENTORY: O1
+
+    這表示將具有參考 (REF) O1 的項目放入此庫存中。
+
+    如果項目引用以感嘆號“！”為前綴該項目最初將以禁用、退出遊戲狀態添加到庫存中。該項目可以通過暫停的 RESET 事件啟用和投入使用。暫停的 RESET 事件由具有 DUE_IN 週期的 RESET 欄位定義。
+
+    可以將容器放入其他容器中。但是，您不能將某些東西或位置直接放在其內部。
+
+    玩家也可以進入容器，即使它可能沒有將其定義為實際位置的 EXITS。
+
+    參考: LOCATION and RESET
+
+  LOCATION: <KEYWORD LIST>
+    LOCATION 欄位用於將某物放入一個或多個庫存中。而 INVENTORY 欄位表示 "將這些項目放在這裡"，而 LOCATION 欄位表示"將此項目放在那裡和那裡"。 LOCATION 和 INVENTORY 具有相同的效果，但 LOCATION 允許用實際的東西來定義某物的放置位置，而 INVENTORY 允許您用該位置定義某個位置的內容。例如：
+
+      LOCATION: L1 L2
+
+    這表示將 LOCATION 欄位定義的項目的副本放入具有 L1 和 L2 引用 (REF) 的事物的清單中。
+
+    如果位置引用以感嘆號“！”為前綴該項目最初將以禁用、停止播放狀態添加到該位置的庫存中。該項目可以通過暫停的 RESET 事件啟用和投入使用。暫停的 RESET 事件由具有 DUE_IN 週期的 RESET 欄位定義。
+
+    在決定是使用 LOCATION 還是 INVENTORY 來放置事物時，根據經驗，使用 LOCATION 來放置特定於某個位置的事物，例如敘述，並使用 INVENTORY 來將事物放置在多個地方。
+
+    參考: INVENTORY and RESET
+
+  NAME: <STRING>
+    項目的簡短描述性名稱。
+
+    例如: a curious brass lattice
+
+    The name should be should be all lower case, except for proper names. This is, prefer "a curious brass lattice" to "A curious brass lattice". The name will be uppercased depending on the situation. For example:
+    名稱應全部小寫，專有名稱除外。 這是，更喜歡"a curious brass lattice"而不是"A curious brass lattice"。 名稱將根據情況大寫。 例如：
+
+      A rabbit enters.
+      >
+      Diddymus studies a rabbit.
+      >
+
+    名字最好以"a"、"an"或"some"開頭，根據情況用"the"代替。 例如：
+
+      You see a curious brass lattice here.
+      >GET LATTICE
+      You get the curious brass lattice.
+      >
+
+  NARRATIVE:
+    一個 NARRATIVE(敘述)欄位標記某物是不可移動的。 敘述也沒有在容器或其他對象的位置上具體列出。 敘述可用於提供有關描述中描述的內容的其他詳細信息。 例如，一個房間可能會說有一個壁爐。 通過將壁爐定義為具有名稱、描述和別名的敘述，並將其添加到該位置的庫存中，玩家可以檢查壁爐。 除了不可移動和未具體列出的敘事外，它們的行為與普通物體一樣。 例如，它們可以有庫存並包含其他對象。
+
+  ONACTION: <string list>
+    ONACTION 可用於為項目編寫命令腳本。 例如：
+
+      OnAction: $ACT quietly chimes.
+              : $ACT quietly hums.
+
+    這些動作將以 ACTION 定義的頻率執行。 每次 ONACTION 觸發時，都會從 ONACTION 定義的動作中隨機選擇一個動作。
+
+    參考: ACTION
+
+  ONCLEANUP: <string>
+    ONCLEANUP 可用於在物品被清理並從遊戲中移除時提供自定義消息。 例如：
+
+      OnCleanup: 奇怪的黃銅格子開始慢慢旋轉。 它迅速加速，然後突然坍塌並消失。
+
+    如果項目清理發生在可以看到的位置，則會顯示該消息。 如果清理發生在容器內，則只有容器中的任何人都能看到。
+
+    如果一個項目沒有 ONCLEANUP 並且可以看到清理，則將顯示以下形式的默認消息：
+
+      "你確定你注意到這裡的 <item>，但你現在看不到它。"
+
+    如果不應該顯示一條消息，即使有人可以看到清理，也可以指定一個不帶消息的 ONCLEANUP。 在這種情況下，該項目將完全消失，根本沒有通知。
+
+    參考: CLEANUP
+
+  ONCOMBAT: <STRING LIST>
+    ONCOMBAT 可用於提供成功戰鬥攻擊的消息列表。 可以為玩家和移動設備指定 ONCOMBAT，在這種情況下，它代表自然攻擊，例如拳擊、踢擊、咬傷和爪擊。 可以在代表物品攻擊的物品上指定 ONCOMBAT。 例如：
+
+      %%
+            Ref: O1
+           Name: a dagger
+          Alias: DAGGER
+         Damage: 1+3
+      Wieldable: HAND=1
+        Cleanup: AFTER=10M JITTER=0S
+       Oncombat: [%A] stab[/s] [%d] with [your/%a.their] dagger drawing blood.
+               : [%A] slash[/es] at [%d] with [your/%a.their] dagger.
+               : [%A] cut[/s] [%d] with [your/%a.their] dagger.
+
+      This is a small, sharp dagger.
+      %%
+
+    ONCOMBAT 消息使用一種特殊格式，由以下格式的替換塊組成：[攻擊者/防御者/觀察者]。 攻擊者的替換只顯示給攻擊者，防守者和觀察員也是如此。 如果沒有為觀察員指定替換，則使用防守者的替換。 如果沒有為防守者指定替換，則使用攻擊者的替換。 可以使用空替換來覆蓋此機制。 一些例子：
+
+     "You see [a/d/o]."   Attacker sees: You see a.
+                          Defender sees: You see d.
+                          Observer sees: You see o.
+
+     "You see [a/d]."     Attacker sees: You see a.
+                          Defender sees: You see d.
+                          Observer sees: You see d.
+
+     "You see [a]."       Attacker sees: You see a.
+                          Defender sees: You see a.
+                          Observer sees: You see a.
+
+     "You see [a/d/]."    Attacker sees: You see a.
+                          Defender sees: You see d.
+                          Observer sees: You see .
+
+     "You see [a/]."      Attacker sees: You see a.
+                          Defender sees: You see .
+                          Observer sees: You see .
+
+    有兩個特殊的替換 %A 和 %D 代表攻擊者和防御者。 如果是他們的消息，他們將替換相關名稱或"您"。如果替換指定為大寫，如 %A 和 %D，則替換的首字母將大寫。 如果將替換指定為小寫，如 %a 和 %d，則將"按原樣"使用替換。 例如，Diddymus 作為攻擊者，imp 作為防御者：
+
+     "[%A] hit[/s] [%d]."  Attacker sees: You hit an imp.
+                           Defender sees: Diddymus hits you.
+                           Observer sees: Diddymus hits an imp.
+
+    中性代詞之一可以跟在 %A 或 %D 之後，用句點分隔。 公認的代詞是：they, them, their and themself。 當替換為攻擊者或防御者性別的正確代詞時，將使用：
+
+                     GENDER   PRONOUN SUBSTITUTIONS
+                     -------  ---------------------------
+                     NEUTRAL  they  them  their  themself
+                     FEMALE   she   her   her    herself
+                     MALE     he    him   his    himself
+                     IT       it    it    its    itself
+
+    如果攻擊者/防御者沒有設置 FEMALE、MALE、NEUTRAL 或 IT 的性別，則假定性別為 IT。
+
+    例如：
+
+    "[%A] stab[/s] [%d] with [%a.their][r/] dagger causing [%d.them] to bleed."
+
+    Attacker sees: You stab an imp with your dagger causing it to bleed.
+    Defender sees: Diddymus stabs you with his dagger causing you to bleed.
+    Observer sees: Diddymus stabs an imp with his dagger causing it to bleed.
+
+    請注意使用"[%a.their][r/]"將"你"變成"你的"僅供攻擊者使用。 這也可以寫成"[your/%a.their]"。
+
+    參考: ARMOUR, DAMAGE and GENDER
+
+  ONRESET: <string>
+    ONRESET 可用於在重置或重生並放回游戲時提供自定義消息。例如：
+
+      OnReset：有一個柔和的音樂音和一個奇怪的黃銅格子突然不知從哪裡出現。
+
+    如果項目重置或重生發生在可以看到的位置，則會顯示該消息。如果物品在容器內重置或重生，消息將顯示在容器所在的位置。例如，假設有一個池塘。池塘是一個敘事容器，裡面裝著一條"金魚"。魚的 ONRESET 是：
+
+      OnReset：一個人進入。在他再次走開之前，他把什麼東西丟進了池塘，發出輕微的撲通聲。
+
+    池塘所在位置的玩家會看到此消息，即使魚正在池塘中重置而不是在實際位置。
+
+    如果一個項目沒有 ONRESET 並且可以看到重置或重生，即重置不在容器中，將顯示以下形式的默認消息：
+
+      "You notice <item> that you didn't see before."
+
+    如果不應該顯示消息，即使可以看到重置或重生，請指定一個不帶消息的 ONRESET。在這種情況下，該項目將簡單地出現而根本沒有通知。
+
+    參考: RESET
+
+  REF: <KEYWORD>
+    REF 是對某物的唯一引用。它只需要在它定義的區域文件中是唯一的。如果使用標準參考前綴是有幫助的，例如"L"代表位置，"O"代表對象，"M"代表生物，"N"代表敘述.合併引用也很有用。例如，如果有一個帶有引用"O1"的容器，屬於其中的項目可能引用"O1O2"、"O1O3"等。特定於"L1"位置的敘述可能引用"L1N1"、"L1N2"、等等。一個貿易商活物參考"M1"可能有其庫存項目為"M1O1"，"M1O2"等。
+
+
+    帶有引用"O1"的容器，屬於其中的項目可能引用"O1O2"、"O1O3"等。特定於"L1"位置的敘述可能引用"L1N1"、"L1N2"、等等。一個貿易商活物參考"M1"可能有其庫存項目為"M1O1"，"M1O2"等。
+
+    對此的一種變體是將參考標記為提醒。例如：L1TAVERN、M1GUARD、O1SWORD。引用通常包含任何 unicode 字母、數字 0-9、下劃線"_"和連字符"-"。小寫字符自動大寫。這意味著"L1Tavern"和"L1TAVERN"的處理方式相同。前綴也可以是後綴。唯一的要求是引用在區域文件中保持唯一。
+
+    有效參考的一些示例：
+
+      L1
+      TAVERN
+      Tavern
+      L1TAVERN
+      L1Tavern
+      L1-TAVERN
+      L1_TAVERN
+      L1-Tavern
+      L1_Tavern
+      TAVERNL1
+      TavernL1
+      Tavern_L1
+      Tavern-L1
+      L1-καπηλειό  <- Google translate says this is Greek for tavern :)
+
+    這只是一個指南，它不是必需的，也不是強制性的。 但是，建議使用一致的命名方案。
+
+    注意：由於從原始 Java 版本轉換而來，當前區域文件使用簡單的 L1、N1、O1、L1N1 方案。
+
+  RESET: <PAIR LIST>
+    RESET 用於指定項目重置或重生的方式和時間。 對 RESET 有效的對是：
+
+      AFTER=<period>
+      JITTER=<period>
+      SPAWN=<boolean>
+      WAIT=<boolean>
+      DUE_IN=<period>
+
+    例如：
+
+      RESET: AFTER=2m JITTER=1m SPAWN WAIT
+
+    AFTER 和 JITTER 指定重置或重生週期在 AFTER 和 AFTER+JITTER 之間。如果 SPAWN 為假或被省略，則該項目被認為是唯一的，除非定義了多個。
+
+   如果一個項目是唯一的 AFTER+JITTER 是項目將被重置並在處理後放回游戲中的時間。玩家無法保留獨特的物品，並且每當玩家註銷時都會強制重置物品。
+
+    如果一個項目不是唯一的，則 AFTER+JITTER 是該項目的新副本將出現在遊戲中的時間段 - 無論是否首先處理之前的副本。玩家可以保留和收集非獨特物品。
+
+    如果指定了 RESET 但未定義 AFTER、JITTER 和 DUE_IN，則最小重置週期將為 1 秒。如果未指定 SPAWN，它將默認為 false。
+
+    僅指定沒有值的 SPAWN 是 SPAWN=True 的簡寫。
+
+    可以在容器上指定 WAIT 以使容器延遲重置並等待其內容也準備好重置。 WAIT 僅在容器上指定時才有效 - 任何具有庫存的項目。 WAIT 也只會影響尚未生成的原始容器和內容。一旦容器生成，由於被拾起，它的行為就像沒有指定 WAIT 一樣。指定了 WAIT 的容器可以嵌套，就像任何其他容器一樣。在非容器上指定 WAIT 無效。如果省略 WAIT 默認為 false。單獨指定 WAIT 是 WAIT=true 的簡寫。
+
+    注意：指定了 WAIT 的容器在重置之前不會等待獨特的項目——除非獨特的項目恰好已經有一個掛起的重置。唯一容器將等待其內容，但如果嵌套則不會等待 - 除非唯一容器恰好已經有一個重置掛起。
+
+    DUE_IN 期間記錄暫停復位事件的剩餘時間。如果該項目在區域首次加載時被禁用，則將恢復重置事件。這可用於在服務器啟動時延遲將項目放入區域。 DUE_IN 週期可以比 AFTER+JITTER 更長或更短。請參閱 INVENTORY 和 LOCATION 部分以了解如何將禁用的項目加載到區域中。如果項目在加載時未被禁用，則 DUE_IN 值將被忽略。一旦恢復的 RESET 事件完成，正常的 AFTER 和 JITTER 值將生效。
+
+    注意：當一個物品被處理並且沒有重置屬性時，它將被從遊戲中移除，直到服務器重新啟動。
+
+    通過為項目定義 ONRESET 重置或重生項目時，可以顯示自定義消息。
+
+    參考: INVENTORY, LOCATION and ONRESET
+
+  START:
+    START 欄位將位置定義為玩家可能出現在世界中的起點。 僅適用於同時定義了 EXITS 欄位的記錄，否則忽略。
+
+  VETO: <KEYED STRING LIST>
+  VETOES: <KEYED STRING LIST>
+    VETOES 欄位定義了不能在對像上使用的命令及其原因。 例如：
+
+      VETOES: GET=你無法獲得魔法石。
+            : EXAMINE=您嘗試檢查這塊神奇的石頭，但這樣做會使您的眼睛流淚並感到刺痛。
+
+    如果添加到"魔法石"的定義中，這將阻止它被拿走或檢查，並給出每一個的具體原因。
+
+    容器可以否決另外兩個偽命令：PUTIN 和 TAKEOUT。 如果 PUTIN 在容器上被否決，則無法將物品放入其中。如果 TAKEOUT 在容器上被否決，則不能從容器中取出任何物品。 個別項目仍然可以在每個項目的基礎上否決 PUT/TAKE。
+
+    PUTIN 和 TAKEOUT 的使用允許"單向"容器。 PUTIN 的一個例子可能是一台你只能從中取東西的自動售貨機。 TAKEOUT 的一個例子可能是一個垃圾桶，你只能把東西放進去而不能移除。
+
+    另一個可以否決的偽命令是 COMBAT，它涵蓋任何形式的戰鬥，但不一定是傷害其他玩家的所有方式。
+
+  WEARABLE: <PAIR LIST>
+    WEARABLE 欄位指定一件物品可以穿戴，並且身體插槽需要這樣做。 例如，一件可以穿的短袖上衣可能會指定：
+
+      WEARABLE: CHEST BACK UPPER_ARM=2
+
+     為了成功佩戴物品，身體槽必須可供佩戴者使用，並且還必須是空閒的 — — 不能在所需的槽中持有、佩戴或揮動其他物品。
+
+    參考: Body, HOLDABLE and WIELDABLE
+
+  WEARING: <KEYWORD LIST>
+    WEARING 欄位指定了在最初加載活動物時應該由活動物穿戴的物品。 WEARING 欄位後面應跟有要佩戴的物品的參考列表。 例如：
+
+      WEARING: O1 O2
+
+    其中 O1 和 O2 是活物物品欄中可以穿戴的物品，並定義了"Ref: O1"和"Ref: O2"。
+
+    對於要成功穿戴的物品，物品需要是可穿戴的，在活物的物品欄中，活物應該有一個 Body 定義，其中包含穿戴物品所需的身體部位。
+
+    參考: Body, WEARABLE, HOLDING and WIELDING
+
+  WIELDABLE: <PAIR LIST>
+    WIELDABLE  欄位指定一個項目可以作為武器使用，並且需要身體插槽來這樣做。 例如，可以單手揮舞的劍將指定為：
+
+      WIELDABLE: HAND
+
+    而需要兩隻手的弓將被指定為：
+
+      WIELDABLE: HAND=2
+
+    要成功使用物品，身體插槽必須可供使用者使用，並且還必須是空閒的 -- 不能在所需的插槽中持有、穿戴或使用其他物品。
+
+    參考: Body, HOLDABLE and WEARABLE
+
+  WIELDING: <KEYWORD LIST>
+    WIELDING  欄位指定了在最初加載活動物時應該由活動物使用的物品。 WIELDING 欄位後面應該跟有要使用的物品的參考列表。 例如：
+
+      WIELDING: O1 O2
+
+    其中 O1 和 O2 是活物物品欄中可以使用的物品，並定義了"Ref: O1"和"Ref: O2"。
+
+    對於要成功使用的物品，該物品需要是 WIELDABLE，在活物的清單中，活物應該有一個 Body，定義了使用該物品所需的身體部位。
+
+    參考: BODY, WIELDABLE, HOLDING and WEARING
+
+  ZONELINKS: <PAIR LIST>
+    WolfMUD 允許將世界創建為單獨的區域，可能由不同的人創作，然後使用 ZONELINKS 將它們鏈接在一起。使用 ZONELINKS 還可以輕鬆識別區域鏈接在一起的位置。 ZONELINK 的工作方式與 EXITS 欄位完全相同。列表中的每一對都應包含一個方向，然後是一個非數字、非字母分隔符，然後是對另一個位置的引用。然而，對於 ZONELINKS，對另一個位置的引用應該是一個區域唯一引用，後跟一個非數字、非字母分隔符，然後是對一個位置的引用。例如：S=ZINARASOUTH:L1 - 這定義了一個 ZONELINKS，其中向南通向具有 REF ZINARASOUTH 的區域中具有 REF L1 的位置。
+
+    當使用 ZONELINKS 添加出口時，應該注意它們通常作為相反的對添加。例如：從 ZONE1:A 向東通向 ZONE2:A，從 ZONE2:A 向西通向 ZONE1:A。由於出口是獨立添加到 ZONE1:A 和 ZONE2:A 的，因此情況並非總是如此。
+
+    ZONELINKS 對可能不完整。例如：S、S=、S=ZINARA 或 S=ZINARA:。這在開發區域時作為提醒很方便。這種不完整的對將被忽略。要在加載區域時發出警告，請改用無效引用。例如，S=X：
+
+    當 ZONELINKS 欄位鏈接到某物時，即使目標沒有特定的 INVENTORY 欄位，清單也會自動添加到鏈接到的目標。
+
+  FREE TEXT BLOCK
+    FREE TEXT BLOCK  用於定義事物的描述。它的開始由一個空行表示，將它與前面的欄位分開。 FREE TEXT BLOCK 的結尾由一個記錄分隔符表示，該分隔符由一行只有兩個百分號"%%"的行組成，或者已到達文件結尾。如果一條記錄只包含一個自由文本塊而沒有欄位，則不需要前面的空行。在 FREE TEXT BLOCK  中，保留空白行和前導空格。
+
+    對於不需要任何格式的簡短描述，最好使用 DESCRIPTION 欄位。如果為記錄指定了自由文本塊和描述，則自由文本塊將附加到描述中，並且自由文本塊將保留任何格式。
+
+    @REF 可以在自由文本塊中使用。它將根據指定的內容自動引用文字描述欄位、自由文本塊或兩者的串聯。
+
+    參考: DESCRIPTION and @REF
+
+參閱
+
+  configuration-file.txt, wolfmud-record-format.txt, running-the-server.txt
+
+版權聲明
+
+   版權由 2022 Andrew 'Diddymus' Rolfe. 版權所有。
+
+   此源代碼的使用受源代碼隨附的 LICENSE 文件中的許可證約束。

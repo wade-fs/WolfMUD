@@ -1,0 +1,283 @@
+
+名稱
+
+  config.wrj - WolfMUD's default configuration file
+
+摘要
+
+  DATA_DIR/config.wrj
+
+描述
+
+  config.wrj 是 WolfMUD 服務器查找的默認配置文件。 
+   可以在命令行上將替代文件傳遞給服務器，
+   從而可以擁有多個配置文件。 
+   例如，一個用於測試配置，一個用於實時配置。
+
+   配置文件是使用 WolfMUD recard jar 格式佈局的純文本文件。
+    附檔名是 .wrj
+
+欄位與值
+
+  以下是配置文件的預期欄位列表以及這些欄位預期的值。 欄位名稱不區分大小寫。
+
+
+  Server.Host: IP address | host name
+    IP 地址或主機名標識服務器應偵聽傳入客戶端連接的網絡接口。
+     默認值為 127.0.0.1 僅供本地連接。
+
+     如果未指定 IP 地址或主機名，服務器將偵聽所有可用接口。
+
+  Server.Port: port number | service name
+    服務器應偵聽傳入客戶端連接的端口。
+     端口可以指定為整數，例如 4001，或作為服務名稱，例如 TELNET 或 SSH
+
+     0 到 1024 範圍內的端口通常受到限制，需要特殊權限。
+     例如，在端口 23 (TELNET) 上運行服務器需要特殊權限。 默認端口為 4001。
+
+  Server.IdleTimeout: period
+    服務器應關閉空閒連接之前的不活動時間量。 
+     期間值可以使用小時 (h)、分鐘 (m) 和秒 (s) 的組合。
+     以下是有效值的示例：10s、10m、 1h、 1h30m。
+     空閒連接的默認超時為 10m - 10 分鐘。
+
+  Server.MaxPlayers: count
+    允許同時連接到服務器的最大玩家數。 
+     計數可以是 0 到 4,294,967,295 之間的任何整數，
+     儘管服務器實際可以支持的玩家數量將因係統而異。 
+     默認最大玩家數為 1024。
+
+  Server.LogClient
+    Determines if the IP address of the connecting client should be logged in the server log. Depending on legislation and regulations (e.g. GDPR) the IP address may be considered personal data and storing of the IP address maybe prohibited or restricted. Some error messages may contain the client IP address, in these cases if Server.LogClient is false the IP address will be replaced with '???' instead:
+    確定連接客戶端的 IP 地址是否應記錄在服務器日誌中。
+     根據法律法規（例如 GDPR），
+     IP 地址可能被視為個人數據， IP 地址的存儲可能被禁止或限制。
+     一些錯誤消息可能包含客戶端 IP 地址，
+     在這些情況下，如果 Server.LogClient 為 false，IP 地址將替換為“???”
+
+    取代：
+
+      connection error: write tcp 127.0.0.1:4001->127.0.0.1:36200: write:
+      broken pipe
+
+    成為：
+
+      connection error: write tcp 127.0.0.1:4001->???:36200: write: broken
+      pipe
+
+    默認值為 false，不記錄傳入的 IP 地址。
+
+  Quota.Slots: int
+    這是一個 IP 地址在 Quota.Window 週期內可以對服務器進行的連接嘗試次數。
+     如果一個 IP 地址在一個 Quota.Window 期間用完了它的所有插槽，
+     它將被禁止連接，直到一個 Quota.Window 期間後一個插槽到期。
+
+    限制來自客戶端的連接不會限制允許的連接數。 
+     它僅限制允許建立連接的速度。
+     例如，一個 IP 地址可以有數百個連接，只要它們不是快速連續地建立即可。
+
+    示例配置條目:
+
+      Quota.Slots:   5
+      Quota.Window:  10s
+
+    此示例將允許一個 IP 地址在 10 秒的窗口內最多連接到服務器五次。
+     如果 IP 地址嘗試在 10 秒內以快於 5 個連接的速率進行連接，
+     則前五個連接之後的其他連接將斷開連接並顯示以下消息：
+
+      "Too many connection attempts, please wait before trying again."
+
+    如果 Quota.Slots 設置為 0，則禁用 IP 配額。
+     Quota.Slots 的默認值為 0。Quota.Slots 的最大值限制為 63。
+
+  Quota.Timeout: period
+    此配置值不再使用。
+
+  Quota.Window: period
+    Quota.Window 時間段用於限制 Quota.Slots 在與服務器的連接開始被拒絕之前
+     可以被 IP 地址用完的速率。
+
+    在一個 Quota.Window 週期內，任何單個 IP 地址最多可以連接到服務器 Quota.Slots 次。
+     在 Quota.Window 期限內達到 Quota.Slots 後的其他連接將被斷開，並顯示以下消息：
+
+      "Too many connection attempts, please wait before trying again."
+
+    如果客戶端持續性地嘗試重複連接，則有效期將從最後一次連接嘗試的時間重新開始。
+     也就是說，在該 IP 地址可以再次連接之前，客戶端必須等待 Quota.Window 的最短時間。
+
+    舉例:
+
+      Quota.Slots:   5
+      Quota.Window:  10s
+
+    如果一個 IP 地址在 10 秒內嘗試連接到服務器超過五次，則第六次嘗試將失敗。
+     然後客戶端必須等待至少 10 秒才能再次嘗試連接。
+     如果他們在 10 秒內嘗試，他們將不得不在最後一次嘗試後等待 10 秒。
+
+    如果 Quota.Window 設置為 0，則禁用 IP 配額。 Quota.Window 的默認值為 0。
+
+  Stats.Rate: period
+    週期值是服務器收集和顯示統計信息的頻率。 此值可以使用小時 (h)、分鐘 (m) 和秒 (s) 的組合。
+     以下是有效值的示例：10s、10m、1h、1h30m。 默認速率是 10s - 每 10 秒。
+
+    統計信息將以以下格式出現在服務器日誌中：
+
+                    A[n] O[n ±n] T[n ±n] E[n ±n] P[n max]
+
+    這些值顯示以下數據:
+
+      A[    n] - 自上次收集以來的運行時分配
+      O[n  ±n] - 運行時對象/自上次收集以來的變化
+      T[n  ±n] - 世界上的事物/自上次收集以來的變化
+      E[n  ±n] - 飛行中活動事件/自上次收集以來的變化
+      P[n max] - 當前玩家數/最大玩家數
+
+  Stats.GC: true | false
+    此值指定是否應在收集和顯示服務器靜態信息之前執行垃圾收集。
+     默認值為假。
+    請注意，將此設置為 true 會導致垃圾收集在正常垃圾收集之外
+     以與 Stats.Rate 週期相同的頻率運行。
+
+  Inventory.Compact:
+    舊設置，現在未使用，可以安全地從配置文件中刪除。
+
+  Inventory.CrowdSize:
+    這個值決定了有多少玩家被認為是一個人群。
+     如果在同一位置有 Inventory.CrowdSize 玩家或更多玩家，
+     則該位置被認為是擁擠的。
+     如果某個位置很擁擠，則不會列出個別玩家，而是通知玩家那裡有人群。
+    此外，如果玩家執行觀察玩家的動作，則不會收到通知，
+     但如果直接與玩家互動，他們仍會收到通知。
+    Inventory.CrowdSize 的默認值為 11。
+
+  Login.AccountLength:
+    此值是創建新帳戶時帳戶 ID 允許的最小字符數。 默認值為 10
+
+  Login.PasswordLength:
+    此值是創建新帳戶時帳戶密碼允許的最小字符數。 默認值為 10。
+
+  Login.SaltLength:
+    該值是創建帳戶時為密碼生成的默認鹽長度(鹽就是用來擾亂密碼的訊息)。
+     默認值為 32。您不需要更改此值。
+
+  Login.Timeout: period
+    在登錄或帳戶創建菜單中不活動的時間量，之後服務器應關閉空閒連接。
+     期間可以使用小時 (h)、分鐘 (m) 和秒 (s) 的組合。
+     以下是有效值的示例：10s、10m、1h、1h30m。
+     空閒連接的默認超時為 1m - 1 分鐘。
+
+  Debug.LongLog
+    該值確定是使用長日誌記錄格式還是較短的日誌記錄格式。
+     如果設置為 true，則日誌將包含精確到毫秒的時間以及
+     為每條寫入的消息寫入日誌消息的文件名和行號。
+     如果設置為 false，日誌將包含精確到秒的時間，
+     並且沒有文件名或行號。
+     注意: 為每條日誌消息生成文件名和行號可能是一項昂貴的操作。
+     Debug.LongLog 的默認值為 false。
+
+    注意：在讀取和處理配置文件之前，日誌將使用長格式，
+          此時如果 Debug.LongLog 為 false，將切換為短格式。
+          決定以長日誌記錄啟動服務器是為了幫助調試，
+          並在加載和處理配置文件期間出現問題時提供更多信息。
+
+  Debug.Panic:
+    該值確定是否允許客戶端或事件 goroutine 中發生的恐慌終止服務器。 
+     將此值設置為 true 將導致服務器終止，
+     如果設置為 false 只有 panicing goroutines 將終止。
+     在任何一種情況下，堆棧跟踪都將寫入日誌。
+     Debug.Panic 的默認值為 false。
+
+  Debug.Events:
+    此值確定在計劃、暫停、取消或傳送事件時是否將消息寫入日誌。
+     這會使日誌非常嘈雜，通常只在開發和調試時需要。
+     如果設置為 true，事件消息將寫入日誌，
+     如果設置為 false，則不會。
+     Debug.Events 的默認值為 false。
+
+  Debug.Things:
+    此值確定是否將消息寫入與事物相關的日誌。
+     如果設置為 true，將在創建、處理和完成事物時寫入消息。
+     這些消息會使日誌非常嘈雜，因此僅建議在開發或調試時將此值設置為 true。
+     Debug.Things 的默認值為 false。
+
+  Debug.Quota:
+    該值確定是否將配額緩存信息寫入服務器日誌。
+     如果啟用，以下格式的行將寫入配額緩存中每個 IP 地址的日誌：
+
+      QC[1  ] M[00000000...000000001 ] X[18:17:55] A[127.0.0.1]
+      QC[2  ] M[00000000...000000111*] X[18:17:56] A[127.0.0.2]
+
+    QC 值是緩存行號，每個報告從 1 開始。
+    M 值顯示 64 位插槽掩碼，其中 0 是未使用的插槽，1 是已使用的插槽。
+     如果 M 值以星號“*”結尾，則 A 值中顯示的 IP 地址超出配額，無法連接。
+    X 值是緩存條目的到期時間。
+    A 值顯示緩存條目的 IP 地址。
+    Debug.Quota 的默認值為 false。
+
+    注意：即使將 Server.LogClient 設置為 false 以不記錄 IP 地址，IP 地址也會顯示。
+
+  自由文本塊:
+    自由文本塊包含玩家連接到服務器後立即顯示的文本。
+
+範例
+
+  下面的示例顯示了使用默認值的默認配置文件。
+   該示例以註釋開頭 - 以“//”開頭並以記錄標記“%%”結尾的行結束。
+
+
+// config.wrj - Default configuration file with default values.
+  Server.Host:          127.0.0.1
+  Server.Port:          4001
+  Server.IdleTimeout:   10m
+  Server.MaxPlayers:    1024
+  Server.LogClient:     false
+  Quota.Slots:          0
+  Quota.Window:         0s
+  Stats.Rate:           10s
+  Stats.GC:             false
+  Inventory.Compact:    8
+  Inventory.CrowdSize:  11
+  Login.AccountLength:  10
+  Login.PasswordLength: 10
+  Login.SaltLength:     32
+  Login.Timeout:        1m
+  Debug.Panic:          false
+  Debug.Events:         false
+  Debug.Things:         false
+  Debug.Quota:          false
+
+
+WolfMUD Copyright 1984-2022 Andrew 'Diddymus' Rolfe
+
+    World
+    Of
+    Living
+    Fantasy
+
+Welcome to WolfMUD!
+
+%%
+
+
+檔案清單
+
+  DATA_DIR/
+    可以是任何包含 WolfMUD 數據文件的目錄。
+    註：DATA_DIR 是環境變數
+
+  DATA_DIR/config.wrj
+    預設的設定檔
+
+參閱
+
+  configuration-file.txt, zone-files.txt
+
+錯誤
+
+  某些文件尚待補足
+
+版權聲明
+
+   版權由 2022 Andrew 'Diddymus' Rolfe. 版權所有。
+
+   此源代碼的使用受源代碼隨附的 LICENSE 文件中的許可證約束。

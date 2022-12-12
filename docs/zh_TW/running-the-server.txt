@@ -1,0 +1,185 @@
+
+名稱
+
+  server - 運行 WolfMUD 服務器實例
+
+摘要
+
+  ./server|server.exe
+
+說明
+
+  運行 WolfMUD 遊戲服務器。 強烈建議創建一個單獨的用戶/組來運行 WolfMUD，並且所有文件都歸該用戶/組所有。 作為安全預防措施，系統上的普通用戶不應訪問播放器和數據文件。
+
+  可執行文件的名稱在 Linux 上是 server，在 Windows 上是 server.exe。該執行文件編譯完很可能是放在 bin/。
+
+  如果您下載了源代碼存檔或克隆了 Git 存儲庫，請在使用這些說明之前查看文件 compiling-from-source.txt。
+
+啟動服務器
+
+  要啟動 WolfMUD 服務器，請打開終端或命令窗口，然後切換到 WolfMUD 解壓或克隆到的目錄。 默認情況下，這是 WolfMUD 目錄。 在 WolfMUD 目錄中，切換到 bin 目錄。 在命令提示符處輸入以下命令：
+
+  針對 LINUX 環境:
+
+    ./server
+
+  針對 WINDOWS 環境:
+
+    .\server.exe
+
+  Windows 用戶的替代方法是使用文件資源管理器導航到 bin 目錄，然後雙擊 server.exe 可執行文件。
+
+  當服務器啟動時，您應該會看到一些消息。 最後一條消息應該是：
+
+    Accepting connections on: 127.0.0.1:4001
+
+  是的，您現在已準備好連接到服務器。telnet 127.0.0.1 4001
+
+連接到服務器
+
+  WolfMUD 服務器運行後，您可以使用任何 TELNET 客戶端作為玩家連接到服務器。 在 Linux 上，可以使用套件管理器安裝 TELNET 客戶端。 在 Windows 上，TELNET 客戶端作為可選的可安裝功能提供（有關詳細信息，請參閱 WINDOWS TELNET 功能）。 但是，任何 TELNET 客戶端都應該可以工作。例如 putty。
+
+  默認情況下，服務器將只允許同一台機器上的本地玩家連接到端口 4001。有關如何更改此設置的詳細信息，請參閱「允許其他機器連接」一節。 要連接播放器，請將 TELNET 連接到端口 4001。對於默認的 Linux TELNET 客戶端或 Windows TELNET 可選功能，發出命令：
+
+    telnet 127.0.0.1 4001 或 telnet localhost 4001
+
+  您現在應該連接到您的 WolfMUD 服務器並看到問候語。
+
+  對於其他客戶端，命令可能會有所不同，或者可能會有圖形連接對話框。 但是，要連接的主機應指定為 127.0.0.1，端口指定為 4001。
+
+WINDOWS TELNET 功能
+
+  如果您運行的是 Windows，則需要啟用 TELNET 客戶端。 轉到控制面板，選擇“程序”或“程序和功能”，然後選擇“打開或關閉 Windows 功能”。 應出現“Windows 功能”對話框。 找到“telnet client”選項，勾選，點擊確定。 啟用 TELNET 可能需要一段時間，並且可能需要重新啟動。
+
+允許其他機器連接
+
+  默認情況下，WolfMUD 服務器將只監聽本地主機，IP 地址為 127.0.0.1，並且只允許來自本地機器的客戶端連接。
+
+  如果您希望允許來自遠程機器的連接，您將需要使用您機器的 IP 地址更新默認情況下位於 WolfMUD 數據目錄中的服務器配置文件 config.wrj。
+
+  例如，如果運行服務器的機器的 IP 地址是 172.16.1.1，您將更新文件 config.wrj 並編輯以下行：
+
+    Server.Host: 127.0.0.1
+
+  此行需要更改為:
+
+    Server.Host: 172.16.1.1
+
+  更改設定後需要重新啟動服務器。要連接到服務器，我們還必須在 telnet 命令中使用新的 IP 地址：
+
+    telnet 172.16.1.1 4001
+
+管理員
+
+  默認情況下，所有玩家在登錄 WolfMUD 服務器時都是普通玩家。 一些受信任的玩家可能會成為管理員。 管理員可以訪問以井號“#”為前綴的管理員命令。
+
+  要讓玩家成為管理員，他們首先必須登錄服務器並創建一個普通玩家帳戶。 然後退出，這樣玩家文件就不會被使用。 接下來，需要編輯玩家文件。 該文件將位於以帳戶 ID 的 MD5 哈希命名的 data/players 目錄中。 例如：
+
+    > echo -n "diddymus@wolfmud.org" | md5sum
+    90d9988c2b7014d622a62681e5643674  -
+    > vim data/players/90d9988c2b7014d622a62681e5643674.wrj
+
+  要查找玩家檔的方式，另一種方式是，讓玩家登錄服務器 - 確保他們再次登出 - 並在服務器日誌中查找類似以下的行：
+
+    [#UID-201] Login for: 90d9988c2b7014d622a62681e5643674
+
+  現在編輯玩家文件。 在玩家文件的第一個檔頭記錄中會有一個 Permissions 字段：
+
+        Account: 90d9988c2b7014d622a62681e5643674
+        Created: Wed, 13 Jul 2016 19:03:18 +0000
+       Password: m9YpVraRWIbZKlIY...
+    Permissions:
+         Player: #UID-201
+           Salt: z0........
+    %%
+
+  要使玩家成為管理員，可以訪問所有管理員命令，請指定“ADMIN”：
+
+    Permissions: ADMIN
+
+  要讓玩家僅訪問特定的管理員命令，請列出它們：
+
+    Permissions: #DUMP #GOTO
+
+  將更改保存到玩家文件。 下次玩家登錄時，他們將擁有您指定的權限。
+
+環境變數
+
+  WOLFMUD_DIR
+    可以設置環境變數 WOLFMUD_DIR 以提供備用數據路徑和/或配置文件供服務器使用。
+
+    WOLFMUD_DIR 值的格式為 [DATA_DIR][configuration_file]
+    WOLFMUD_DIR 預設值等於 ../data/config.wrj
+
+    DATA_DIR
+      數據目錄的可選相對或絕對路徑。 默認值為 ../data/ 即當前路徑中的數據。會出現 ../ 是因為相對於服務器 bin。
+
+    configuration_file
+      特定配置文件的可選名稱。 將在 DATA_DIR 中查找配置文件。 默認值為 config.wrj
+
+    作為一種特殊情況，WOLFMUD_DIR 可以設置為特殊值 NONE 以加載服務器的默認內置配置。 這在測試時很有用。
+
+  Setting WOLFMUD_DIR
+
+    環境變量 WOLFMUD_DIR 可以使用多種不同的方法進行設置，具體取決於所使用的操作系統和命令 shell。
+
+    對於 Linux 系統，使用 Bash shell，可以通過為可執行文件添加前綴來為服務器的當前實例設置環境變量：
+
+      WOLFMUD_DIR=../data/config.wrj ./server
+
+    也可以通過導出變量為當前 Bash 實例設置環境變量，然後啟動服務器：
+
+      export WOLFMUD_DIR=../data/config.wrj
+      ./server
+
+    Bash 以外的 Shell 可能表現不同，並且可能使用 export 內置命令以外的東西在 Shell 中設置環境變量。
+
+    Windows 用戶應該在運行服務器之前使用內置的“set”來設置環境變量：
+
+      set WOLFMUD_DIR=../data/config.wrj
+      .\server.exe
+
+範例
+
+  WOLFMUD_DIR=example.wrj
+    使用默認路徑../data/，相對於當前目錄作為 DATA_DIR 和指定的配置文件example.wrj。
+
+  WOLFMUD_DIR=../testdata/example.wrj
+    使用相對於當前目錄的路徑../testdata/作為DATA_DIR和指定的配置文件example.wrj。
+
+  WOLFMUD_DIR=/home/diddymus/WolfMUD/data
+    使用絕對路徑 /home/diddymus/WolfMUD/data 作為 DATA_DIR 和默認配置文件 config.wrj。
+
+  WOLFMUD_DIR=/home/diddymus/WolfMUD/data/example.wrj
+    使用絕對路徑/home/diddymus/WolfMUD/data作為DATA_DIR和指定的配置文件example.wrj
+
+  WOLFMUD_DIR=NONE
+    Use the default, built in configuration. This is only useful for testing.
+
+相關檔案清單
+
+  DATA_DIR/
+    可以是保存 WolfMUD 數據文件的目錄的任何路徑。
+
+  DATA_DIR/config.wrj
+    默認配置文件。
+
+  DATA_DIR/zones/*.wrj
+    用於定位區域文件的路徑。 區域目錄中以 .wrj 結尾的任何文件都將作為區域文件加載。
+
+  DATA_DIR/players/*.wrj
+    用於定位玩家帳戶文件的路徑。 玩家目錄中以 .wrj 結尾的任何文件都將被視為玩家文件。
+
+參閱
+
+  configuration-file.txt, zone-files.txt
+
+錯誤摘要
+
+  某些文件尚未寫。
+
+版權聲明
+
+   版權由 2022 Andrew 'Diddymus' Rolfe. 版權所有。
+
+   此源代碼的使用受源代碼隨附的 LICENSE 文件中的許可證約束。

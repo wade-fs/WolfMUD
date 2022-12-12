@@ -1,0 +1,77 @@
+
+名稱
+
+  *.wrj - WolfMUD Record Jar 檔案格式
+
+說明
+
+  本文檔描述了 WolfMUD 使用的 record jar 格式。 使用 record jar 格式格式化的文件具有文件擴展名 .wrj，並且是可能包含 Unicode 的純文本文件。
+
+  一份 record jar 文件由一個或多個由記錄分隔符分隔的記錄組成。 每條記錄可能包含評論、字段和自由文本塊。
+
+  一個包含三個記錄的示例 record jar 文件如下：
+
+    // Copyright 2016 Andrew 'Diddymus' Rolfe. All rights reserved.
+    //
+    // Use of this file is governed by the license in the LICENSE file
+    // included with the source code.
+    %%
+          Ref: ZINARA
+         Zone: City of Zinara
+       Author: Andrew 'Diddymus' Rolfe
+
+    This is the city of Zinara.
+    %%
+          Ref: L1
+        Start:
+         Name: Fireplace
+      Aliases: TAVERN FIREPLACE
+        Exits: E=L3 SE=L4 S=L2
+    Inventory: L1N1
+
+    你在龍息酒館公共休息室的角落裡。 華麗的壁爐裡熊熊燃燒著火光，為疲憊的旅客帶來慰藉。 火焰使影子在房間裡閃爍和舞動，使黑暗變亮，然後又變暗。 公共休息室向南延伸，公共休息室向東通向酒館入口。
+    %%
+
+
+註釋
+
+  註釋行是以兩個正斜杠字符'//'開頭的行。
+  註釋可以使用白空縮排。
+
+空行
+
+  空行只允許在記錄中表示自由文本塊的開始或自由文本塊本身。
+
+記錄分隔 %%
+
+  記錄由僅包含兩個百分號"%%"的行分隔。 記錄分隔符的頭允許使用空格縮進，建議不要這樣做以免不易閱讀並且出錯，除非在自由文本塊之後。 在自由文本塊之後，記錄分隔符之前不應有前導空格。 記錄罐中最後一條記錄的最終記錄分隔符可以省略。
+
+欄位
+
+  欄位由單個單詞名稱後跟單個冒號“:”組成。 名稱可以使用空格縮進。 冒號後面可以跟可選數據。 欄位名稱不區分大小寫，並且不得包含空格。
+
+  冒號和數據之間允許有空格以提高可讀性。
+
+  冒號後面的數據可能跨越多行。 後續行可以使用前導空格縮進。
+
+  根據欄位名稱，相關數據的格式可能有特殊要求。
+
+FREE TEXT BLOCK 自由文字
+
+  一條記錄可能包含一個可選的自由文本塊。 自由文本塊的開始由一個空行表示。 如果記錄包含自由文本塊，則只能省略前導空行：
+
+  %%
+  This is a free text block.
+  %%
+
+  自由文本塊中的任何前導空格和任何空行都將被保留。
+
+參閱
+
+  configuration-file.txt, zone-files.txt
+
+版權聲明
+
+   版權由 2022 Andrew 'Diddymus' Rolfe. 版權所有。
+
+   此源代碼的使用受源代碼隨附的 LICENSE 文件中的許可證約束。
